@@ -23,6 +23,7 @@ const Result = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false); // State to manage login status
   const [kycStatus, setKycStatus] = useState(""); // State to manage KYC status
   const id1 = localStorage.getItem("_id");
+
   useEffect(() => {
     const fetchPredictions = async () => {
       try {
@@ -49,13 +50,8 @@ const Result = () => {
       setIsLoggedIn(true);
     }
   }, []);
-  useEffect(() => {
-    // Check if the user is logged in by checking the localStorage for authToken
-    const authToken = localStorage.getItem("authToken");
-    if (authToken) {
-      setIsLoggedIn(true);
-    }
 
+  useEffect(() => {
     const fetchKycStatus = async () => {
       try {
         const response = await axios.get(`https://trcnfx.com/api/kyc/${id1}`);
@@ -69,6 +65,7 @@ const Result = () => {
       fetchKycStatus();
     }
   }, [uid]);
+
   useEffect(() => {
     const fetchLogos = async () => {
       try {
@@ -88,9 +85,18 @@ const Result = () => {
           }
         );
         const logoMap = {};
-        response.data.forEach((coin) => {
-          logoMap[coin.symbol.toLowerCase()] = coin.image;
-        });
+        for (const coin of response.data) {
+          const imageUrl = coin.image;
+          const imageResponse = await axios.get(
+            "https://trcnfx.com/api/fetch-image",
+            {
+              params: { imageUrl },
+            }
+          );
+          logoMap[
+            coin.symbol.toLowerCase()
+          ] = `data:image/jpeg;base64,${imageResponse.data.image}`;
+        }
         setLogos(logoMap);
       } catch (error) {
         console.error("Error fetching logos:", error);
@@ -117,7 +123,7 @@ const Result = () => {
       <li key={prediction._id} className="prediction-item">
         <PredictionSummary
           prediction={prediction}
-          logo={logos[prediction.symbol.toUpperCase()]}
+          logo={logos[prediction.symbol.toLowerCase()]}
           showResult={showResult}
         />
       </li>
