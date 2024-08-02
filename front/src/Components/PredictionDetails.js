@@ -19,7 +19,6 @@ const cryptoNameToSymbol = {
 const PredictionDetails = () => {
   const { predictionId } = useParams();
   const [prediction, setPrediction] = useState(null);
-  const [logo, setLogo] = useState("");
   const [logoBase64, setLogoBase64] = useState("");
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navigate = useNavigate();
@@ -40,10 +39,7 @@ const PredictionDetails = () => {
         );
         setPrediction(response.data);
 
-        const symbol =
-          response.data.symbol.toLowerCase() ||
-          response.data.symbol.toLowerCase();
-
+        const symbol = response.data.symbol.toLowerCase();
         const logoResponse = await axios.get(
           `https://pro-api.coingecko.com/api/v3/coins/${symbol}`,
           {
@@ -52,13 +48,14 @@ const PredictionDetails = () => {
             },
           }
         );
-        setLogo(logoResponse.data.image.large);
-        const imageResponse = await axios.get(logoResponse.data.image.large, {
-          responseType: "arraybuffer",
-        });
-        const base64Flag = "data:image/jpeg;base64,";
-        const imageStr = arrayBufferToBase64(imageResponse.data);
-        setLogoBase64(base64Flag + imageStr);
+        const imageUrl = logoResponse.data.image.large;
+        const imageResponse = await axios.get(
+          "https://trcnfx.com/api/fetch-image",
+          {
+            params: { imageUrl },
+          }
+        );
+        setLogoBase64(`data:image/jpeg;base64,${imageResponse.data.image}`);
       } catch (error) {
         console.error("Error fetching prediction:", error);
       }
@@ -66,16 +63,6 @@ const PredictionDetails = () => {
 
     fetchPrediction();
   }, [predictionId]);
-
-  const arrayBufferToBase64 = (buffer) => {
-    let binary = "";
-    const bytes = new Uint8Array(buffer);
-    const len = bytes.byteLength;
-    for (let i = 0; i < len; i++) {
-      binary += String.fromCharCode(bytes[i]);
-    }
-    return window.btoa(binary);
-  };
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
