@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import Countdown from "./Countdown"; // Import Countdown component
-import "./PredictionSummary.css"; // Import the CSS file
+import Countdown from "./Countdown";
+import "./PredictionSummary.css";
 
 const cryptoNameToSymbol = {
   ethereum: "ETH",
@@ -17,22 +17,23 @@ const PredictionSummary = ({ prediction, showResult }) => {
   useEffect(() => {
     const fetchLogo = async () => {
       try {
-        const symbol =
-          prediction.symbol.toLowerCase() || prediction.symbol.toLowerCase();
+        const symbol = prediction.symbol.toLowerCase();
         const logoResponse = await axios.get(
-          `https://pro-api.coingecko.com/api/v3/coins/${symbol.toLowerCase()}`,
+          `https://pro-api.coingecko.com/api/v3/coins/${symbol}`,
           {
             headers: {
               "X-Cg-Pro-Api-Key": "CG-abdEKxm7HXgBnnG2D2eexnmq",
             },
           }
         );
-        const imageResponse = await axios.get(logoResponse.data.image.large, {
-          responseType: "arraybuffer",
-        });
-        const base64Flag = "data:image/jpeg;base64,";
-        const imageStr = arrayBufferToBase64(imageResponse.data);
-        setLogoBase64(base64Flag + imageStr);
+        const imageUrl = logoResponse.data.image.large;
+        const imageResponse = await axios.get(
+          "https://trcnfx.com/api/fetch-image",
+          {
+            params: { imageUrl },
+          }
+        );
+        setLogoBase64(`data:image/jpeg;base64,${imageResponse.data.image}`);
       } catch (error) {
         console.error("Error fetching logo:", error);
       }
@@ -40,16 +41,6 @@ const PredictionSummary = ({ prediction, showResult }) => {
 
     fetchLogo();
   }, [prediction.symbol]);
-
-  const arrayBufferToBase64 = (buffer) => {
-    let binary = "";
-    const bytes = new Uint8Array(buffer);
-    const len = bytes.byteLength;
-    for (let i = 0; i < len; i++) {
-      binary += String.fromCharCode(bytes[i]);
-    }
-    return window.btoa(binary);
-  };
 
   const handleNavigateToDetails = () => {
     if (showResult) {
@@ -86,7 +77,7 @@ const PredictionSummary = ({ prediction, showResult }) => {
             className="logo"
             onError={(e) => {
               e.target.onerror = null;
-              e.target.src = "https://via.placeholder.com/50"; // Fallback image if logo is not found
+              e.target.src = "https://via.placeholder.com/50";
             }}
           />
           <h1 style={{ color: "black", fontSize: "13px" }}>
