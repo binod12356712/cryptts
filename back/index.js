@@ -73,8 +73,8 @@ const transporter = nodemailer.createTransport({
     ciphers: "SSLv3",
   },
   auth: {
-    user: "np03cs4s220296@heraldcollege.edu.np",
-    pass: "drni kowm ahrn cabp",
+    user: "info.trcnfx@gmail.com",
+    pass: "wfwi gwle xxdo yijl",
   },
 });
 app.post("/api/forgot-password", async (req, res) => {
@@ -101,7 +101,7 @@ app.post("/api/forgot-password", async (req, res) => {
     );
 
     const mailOptions = {
-      from: "np03cs4s220296@heraldcollege.edu.np",
+      from: "info.trcnfx@gmail.com",
       to: user.email,
       subject: "Password Reset Verification Code",
       text: `Your verification code is ${verificationCode}`,
@@ -131,7 +131,6 @@ app.get("/api/fetch-image", async (req, res) => {
     res.status(500).json({ message: "Failed to fetch image" });
   }
 });
-
 app.post("/api/verify-code", async (req, res) => {
   const { email, code } = req.body;
   try {
@@ -251,7 +250,78 @@ const walletSchema = new mongoose.Schema({
   },
 });
 const Wallet = mongoose.model("Wallet", walletSchema);
+const WalletInfoSchema = new mongoose.Schema({
+  symbol: { type: String, required: true, unique: true },
+  walletAddress: { type: String, required: true },
+  qrCodeUrl: { type: String, required: true },
+  cryptoName: { type: String, required: true }, // Add this line
+});
 
+const WalletInfo = mongoose.model("WalletInfo", WalletInfoSchema);
+// Wallet Info Routes
+app.post(
+  "/api/wallet-info/upload",
+  upload.single("qrCode"),
+  async (req, res) => {
+    const { symbol, walletAddress, cryptoName } = req.body;
+    const qrCodeUrl = req.file ? req.file.path : null;
+
+    if (!symbol || !walletAddress || !qrCodeUrl || !cryptoName) {
+      return res.status(400).json({ message: "All fields are required." });
+    }
+
+    try {
+      const existingWalletInfo = await WalletInfo.findOne({
+        symbol: symbol.toUpperCase(),
+      });
+      if (existingWalletInfo) {
+        existingWalletInfo.walletAddress = walletAddress;
+        existingWalletInfo.qrCodeUrl = qrCodeUrl;
+        existingWalletInfo.cryptoName = cryptoName;
+        await existingWalletInfo.save();
+        return res.json({ message: "Wallet info updated successfully." });
+      }
+
+      const newWalletInfo = new WalletInfo({
+        symbol: symbol.toUpperCase(),
+        walletAddress,
+        qrCodeUrl,
+        cryptoName,
+      });
+      await newWalletInfo.save();
+      res.json({ message: "Wallet info added successfully." });
+    } catch (error) {
+      console.error("Error saving wallet info:", error);
+      res.status(500).json({ message: "Internal server error." });
+    }
+  }
+);
+
+app.get("/api/wallet-info/:symbol", async (req, res) => {
+  const { symbol } = req.params;
+  try {
+    const walletInfo = await WalletInfo.findOne({
+      symbol: symbol.toUpperCase(),
+    });
+    if (!walletInfo) {
+      return res.status(404).json({ message: "Wallet info not found" });
+    }
+    res.json(walletInfo);
+  } catch (error) {
+    console.error("Error fetching wallet info:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+app.get("/api/wallet-info", async (req, res) => {
+  try {
+    const walletInfos = await WalletInfo.find();
+    res.json(walletInfos);
+  } catch (error) {
+    console.error("Error fetching wallet info:", error);
+    res.status(500).json({ message: "Internal server error." });
+  }
+});
 const depositSchema = new mongoose.Schema(
   {
     userId: {
@@ -1174,6 +1244,7 @@ app.post(
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
+        console.error("Validation Errors:", errors.array());
         return res.status(400).json({ errors: errors.array() });
       }
 
@@ -1206,7 +1277,7 @@ app.post(
       const logoPath = path.join(__dirname, "logo2.png");
 
       const mailOptions = {
-        from: "np03cs4s220296@heraldcollege.edu.np",
+        from: "info.trcnfx@gmail.com",
         to: user.email,
         subject: "Thank you for signing up!",
         html: `
@@ -1245,7 +1316,7 @@ app.post(
         }
       });
     } catch (error) {
-      console.error(error);
+      console.error("Server Error:", error);
       res.status(500).send("Internal Server Error");
     }
   }
