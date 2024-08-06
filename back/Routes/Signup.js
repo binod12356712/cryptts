@@ -31,6 +31,10 @@ router.post(
         return res.status(400).json({ message: "Incorrect password" });
       }
 
+      if (!userdata.isOtpVerified) {
+        return res.status(400).json({ message: "OTP not verified" });
+      }
+
       const data = {
         user: {
           id: userdata._id,
