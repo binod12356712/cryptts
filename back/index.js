@@ -173,6 +173,7 @@ app.post("/api/verify/otp", async (req, res) => {
     // OTP is valid, save the user
     user.otp = undefined;
     user.otpExpires = undefined;
+    user.isOtpVerified = true; // Set OTP verified to true
     await user.save();
 
     const data = {
@@ -1269,7 +1270,7 @@ app.post(
         userId: userId,
         walletAddress: walletAddress,
         otp: otp, // Save OTP
-        otpExpires: Date.now() + 3600000, // 1 hour expiration
+        otpExpires: Date.now() + 120000, // 1 minute expiration
       });
 
       await user.save(); // Save user data to the database
@@ -1313,6 +1314,15 @@ app.post(
               otp: otp,
             },
           });
+
+          // Set a timeout to delete the user if OTP is not verified within 1 minute
+          setTimeout(async () => {
+            const user = await User.findOne({ email: req.body.email });
+            if (user && !user.isOtpVerified) {
+              await User.deleteOne({ email: req.body.email });
+              console.log(`Deleted unverified user: ${req.body.email}`);
+            }
+          }, 60000); // 1 minute
         }
       });
     } catch (error) {
