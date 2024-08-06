@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+
 const userSchema = new mongoose.Schema({
   email: {
     type: String,
@@ -26,11 +27,18 @@ const userSchema = new mongoose.Schema({
   otpExpires: {
     type: Date,
   },
+  isOtpVerified: {
+    type: Boolean,
+    default: false,
+  },
   agentId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Agent",
   },
-  agentUID: { type: String, default: null },
+  agentUID: {
+    type: String,
+    default: null,
+  },
   defaultTradeResult: {
     type: String,
     enum: ["win", "loss", null],
@@ -39,3 +47,4 @@ const userSchema = new mongoose.Schema({
 });
 
 module.exports = mongoose.model("User", userSchema);
+
