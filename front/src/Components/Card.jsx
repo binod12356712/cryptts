@@ -216,11 +216,11 @@ export default function Card() {
                   <i className="fas fa-chart-bar"></i> Profit Statistics
                 </button>
               </li>
-              <li>
+              {/* <li>
                 <button className="link" onClick={() => navigate("/helpLoan")}>
                   <i className="fas fa-book"></i> Help Loan
                 </button>
-              </li>
+              </li> */}
               <li>
                 <button className="link" onClick={() => navigate("/contactUs")}>
                   <i className="fas fa-phone"></i> Contact Us
